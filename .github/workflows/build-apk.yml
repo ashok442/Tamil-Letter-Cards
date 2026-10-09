@@ -20,7 +20,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-          
+
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
@@ -38,6 +38,30 @@ jobs:
         run: |
           mkdir appsrc
           unzip TamilLetterCards_AndroidStudio_Project.zip -d appsrc
+
+      - name: Set Java and Kotlin targets to 17
+        working-directory: appsrc
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("app/build.gradle.kts")
+          s = p.read_text()
+          s += '''
+
+          // Keep Java and Kotlin bytecode targets consistent for CI builds.
+          android {
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+          }
+
+          kotlin {
+              jvmToolchain(17)
+          }
+          '''
+          p.write_text(s)
+          PY
 
       - name: Build APK
         working-directory: appsrc
